@@ -15,6 +15,14 @@ Task 3:
 - Normal bricks require 1 hit.
 - Strong bricks require multiple hits.
 - Unbreakable bricks can never be destroyed.
+
+Task 4:
+- Normal bricks give 10 base points.
+- Strong bricks give 20 base points.
+- Consecutive successful hits increase the combo multiplier.
+- Score earned is multiplied by the current combo.
+- Combo resets when the ball is lost.
+- Score and combo are displayed.
 """
 
 import pygame
@@ -34,6 +42,9 @@ BRICK_TOP_MARGIN = 50
 
 STARTING_LIVES = 3
 
+NORMAL_SCORE = 10
+STRONG_SCORE = 20
+
 
 class GameEngine:
     def __init__(self):
@@ -42,6 +53,10 @@ class GameEngine:
 
         self.lives = STARTING_LIVES
         self.game_over = False
+
+        # Task 4: score and combo.
+        self.score = 0
+        self.combo = 0
 
         self.bricks = self._build_bricks()
 
@@ -85,6 +100,10 @@ class GameEngine:
         self.lives = STARTING_LIVES
         self.game_over = False
 
+        # Reset score and combo for a new game.
+        self.score = 0
+        self.combo = 0
+
         self.bricks = self._build_bricks()
 
     def handle_input(self, keys_pressed):
@@ -115,26 +134,38 @@ class GameEngine:
         self.ball.update()
         self.ball.bounce_off_walls(WIDTH)
 
-        # Ball-paddle collision
+        # Ball-paddle collision.
         if (
             self.ball.get_rect().colliderect(self.paddle.get_rect())
             and self.ball.vy > 0
         ):
             self.ball.bounce_off_paddle(self.paddle.get_rect())
 
-        # Ball-brick collision
+        # Ball-brick collision.
         for brick in self.bricks:
             if handle_ball_brick_collision(self.ball, brick):
 
-                # Unbreakable bricks are never destroyed.
+                # Unbreakable bricks:
+                # no score, no combo increase, never removed.
                 if brick.brick_type == Brick.UNBREAKABLE:
                     break
+
+                # A successful hit on a breakable brick
+                # increases the combo multiplier.
+                self.combo += 1
 
                 # Normal and strong bricks lose one hit.
                 brick.hits_remaining -= 1
 
-                # Remove the brick when all required hits are used.
+                # Award points when the brick is destroyed.
                 if brick.hits_remaining <= 0:
+
+                    if brick.brick_type == Brick.NORMAL:
+                        self.score += NORMAL_SCORE * self.combo
+
+                    elif brick.brick_type == Brick.STRONG:
+                        self.score += STRONG_SCORE * self.combo
+
                     self.bricks.remove(brick)
 
                 break
@@ -142,6 +173,9 @@ class GameEngine:
         # Ball falls below the screen.
         if self.ball.is_below(HEIGHT):
             self.lives -= 1
+
+            # Losing the ball breaks the combo.
+            self.combo = 0
 
             if self.lives > 0:
                 # Player gets another attempt.
@@ -168,12 +202,28 @@ class GameEngine:
             (10, 10)
         )
 
+        # Display score.
+        renderer.draw_text(
+            surface,
+            font,
+            f"Score: {self.score}",
+            (10, 35)
+        )
+
+        # Display combo multiplier.
+        renderer.draw_text(
+            surface,
+            font,
+            f"Combo: x{self.combo}",
+            (10, 60)
+        )
+
         # Display remaining lives.
         renderer.draw_text(
             surface,
             font,
             f"Lives: {self.lives}",
-            (10, 35)
+            (10, 85)
         )
 
         # Display game-over message.
