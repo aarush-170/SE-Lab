@@ -10,6 +10,11 @@ Task 2:
 - Ball resets after losing a life.
 - Game over occurs when all lives are lost.
 - Press R to restart after game over.
+
+Task 3:
+- Normal bricks require 1 hit.
+- Strong bricks require multiple hits.
+- Unbreakable bricks can never be destroyed.
 """
 
 import pygame
@@ -51,8 +56,21 @@ class GameEngine:
                 x = start_x + col * (BRICK_WIDTH + BRICK_GAP)
                 y = BRICK_TOP_MARGIN + row * (BRICK_HEIGHT + BRICK_GAP)
 
+                if row == 0:
+                    brick_type = Brick.UNBREAKABLE
+                elif row == 1:
+                    brick_type = Brick.STRONG
+                else:
+                    brick_type = Brick.NORMAL
+
                 bricks.append(
-                    Brick(x, y, BRICK_WIDTH, BRICK_HEIGHT)
+                    Brick(
+                        x,
+                        y,
+                        BRICK_WIDTH,
+                        BRICK_HEIGHT,
+                        brick_type=brick_type,
+                    )
                 )
 
         return bricks
@@ -107,10 +125,15 @@ class GameEngine:
         # Ball-brick collision
         for brick in self.bricks:
             if handle_ball_brick_collision(self.ball, brick):
+
+                # Unbreakable bricks are never destroyed.
+                if brick.brick_type == Brick.UNBREAKABLE:
+                    break
+
+                # Normal and strong bricks lose one hit.
                 brick.hits_remaining -= 1
 
-                # Task 1:
-                # Remove the brick when it has no hits remaining.
+                # Remove the brick when all required hits are used.
                 if brick.hits_remaining <= 0:
                     self.bricks.remove(brick)
 
