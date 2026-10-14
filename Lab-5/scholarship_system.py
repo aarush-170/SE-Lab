@@ -1,6 +1,4 @@
 import json
-import math
-import sys
 
 # Global state
 results = {}
@@ -9,8 +7,10 @@ CREDIT_WEIGHT = 2
 INCOME_LIMIT = 800000
 CUTOFF = 85
 
+
 def calculate_merit_score(gpa, credits):
     return gpa * GPA_WEIGHT + credits * CREDIT_WEIGHT
+
 
 def evaluate_applicant(student_id, test_scores, logs=[]):
     gpa = test_scores["gpa"]
@@ -21,6 +21,7 @@ def evaluate_applicant(student_id, test_scores, logs=[]):
     results[student_id] = {"score": score, "eligible": eligible}
     logs.append("%s scored %s" % (student_id, score))
     return eligible
+
 
 def change_gpa_weight(raw):
     global GPA_WEIGHT
@@ -34,10 +35,12 @@ def change_gpa_weight(raw):
         return
     GPA_WEIGHT = weight
 
+
 def persist_results(file="scholarships.json"):
     f = open(file, "w")
     f.write(json.dumps(results))
     f.close()
+
 
 def load_results(file="scholarships.json"):
     global results
@@ -46,11 +49,13 @@ def load_results(file="scholarships.json"):
     except (OSError, json.JSONDecodeError) as err:
         print("Could not load results:", err)
 
+
 def printShortlist():
     print("Shortlisted applicants:")
     for r in results:
-        if results[r]["eligible"] == True:
+        if results[r]["eligible"]:
             print(" ", r, "score =", results[r]["score"])
+
 
 def main():
     evaluate_applicant("U001", {"gpa": 9.1, "credits": 4, "income": 450000})
@@ -64,5 +69,6 @@ def main():
     persist_results()
     load_results()
     printShortlist()
+
 
 main()
